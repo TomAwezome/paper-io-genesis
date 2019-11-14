@@ -1,0 +1,94 @@
+# include <genesis.h>
+
+
+u32 x = 0;
+u32 y = 0;
+
+void myJoyHandler(u16 joy, u16 changed, u16 state)
+{
+    if (joy == JOY_1) {
+        if (state & BUTTON_START) {
+         // player 1 pressed START button
+            VDP_drawText("player1 START pressed | TOMAWEZOME",0,0);
+        } else if (changed & BUTTON_START) {
+         // player 1 released START button
+            VDP_drawText("player1 START released | AWEZOMETOM",0,0);
+            //char str[2];
+            //intToStr(b,str,0);
+            //VDP_drawText(str,0,0);
+        }
+        
+        else if (state & BUTTON_UP) {
+            y--;
+            VDP_resetScreen();
+        } else if (state & BUTTON_DOWN) {
+            y++;
+//            SRAM_writeByte(x,x);
+            VDP_resetScreen();
+        } else if (state & BUTTON_LEFT) {
+            x--;
+            VDP_resetScreen();
+        } else if (state & BUTTON_RIGHT) {
+            x++;
+            VDP_resetScreen();
+        }
+    }
+}
+
+const u32 tile[8]=
+{
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+};
+
+
+int main()
+{
+//    VDP_drawText("VDP draw text? First processor to bit ba",0,0);
+//    VDP_drawText("ng",0,1);
+//    SRAM_enable();
+    VDP_loadTileData((const u32 *)tile,1,1,0);
+    JOY_init();
+    JOY_setEventHandler( &myJoyHandler);
+    s8 i = 0;
+    u8 map[128][128];
+    for (u8 j = 0; j<128;j++) {
+    	for (u8 k = 0; k<128;k++) {
+    		map[j][k] = 0;
+    	}
+    }
+    char mapSizeString[10];
+    char *mapSizeStringPointer = mapSizeString;
+	uintToStr(sizeof(map),mapSizeStringPointer,0);
+    
+    while (1)
+    {
+        //read input
+        //move sprite
+        //update score
+        //draw current screen (logo, start screen, settings, game, gameover, credits..)
+//        i = i+1;
+//        VDP_drawText("VDP draw text? First processor to bit ba",i,i);
+//        VDP_drawText("ng",i,i+1);
+        
+        //politely wait for screen refresh instead of going nuts on the Genesis CPU
+//        VDP_drawText("@",x,y);
+        
+        //s16 x16 = x;
+        //s16 values[1] = {x16};
+        //s16* values_ptr = values;
+        VDP_setTileMapXY(PLAN_A,1,x,y);
+        VDP_drawText(mapSizeString,3,3);
+        i++;
+		VDP_setHorizontalScroll(PLAN_A,i);
+        VDP_showFPS(0);
+        VDP_waitVSync();
+    }
+    return 0;
+}

@@ -1,0 +1,244 @@
+# include <genesis.h>
+# include <resources.h>
+
+/*
+u32 x = 0;
+u32 y = 0;
+
+s16 cameraX = 0;
+s16 cameraY = 0;
+
+u8 direction = 0; // 0 up, 1 right, 2 down, 3 left
+*/
+
+const u32 borderTile[8]=
+{
+    0x11111111,
+    0x11111111,
+    0x11111111,
+    0x11111111,
+    0x11111111,
+    0x11111111,
+    0x11111111,
+    0x11111111,
+};
+
+const u32 pathTile[8]=
+{
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+};
+
+const u32 claimTile[8]=
+{
+    0x33333333,
+    0x33333333,
+	0x33333333,
+	0x33333333,
+	0x33333333,
+	0x33333333,
+	0x33333333,
+	0x33333333,
+
+};
+
+struct Camera {
+	s16 x; //s16 since scroll methods take s16 parameters.
+	s16 y;
+};
+struct Player {
+	u8 direction; // only need 4 directions of the 256 values possible. 1 up 2 right 3 down 4 left
+	s16 x;
+	s16 y;
+	u8 nextDirection; // if inputs made while moving, stored here to use at next direction decision.
+	Sprite *sprite; // holds the player's sprite, used when drawing.
+	u8 gameover; // 0 not gameover 1 is gameover. goal, display screen asking retry or quit.
+	u8 pathMapValue; // values used to represent player's claim/path numbers in map matrix. 
+	u8 claimMapValue;//
+};
+
+struct Camera camera;
+struct Player humanPlayer;
+u8 computersAmount = 1; // set to one as default value
+struct Player computers[1]; // should create variable representing array of Player structs. manually set to 1 AI for now.
+
+void adjustCamera() {
+	// adjust based on player. trying to center it.
+	// let's experiment by just working out a raw centering algorithm.
+	// cameraXY is 0 and based on pixels and each spriteXY is pixel based but has 8x8 size.
+	// so, cameraX = humanPlayerX - 160 , cameraY = humanPlayerY - 112 ? each is half of pixel distance of XY screen res.
+	camera.x = 160 - humanPlayer.x;
+	camera.y = humanPlayer.y - 112;
+	// if camera is off screen left/up, fix that.
+	if (camera.x > 0) camera.x = 0;
+	if (camera.y < 0) camera.y = 0;
+	// if camera is far enough to start looping right/down, fix that.
+	if (camera.x < -192) camera.x = -192;
+	if (camera.y > 288) camera.y = 288; // so far we're guessing/forcing magic numbers against map WH >->
+
+}
+
+void drawPlayers() {
+	// players have xy vals relative to map, albeit pixel.
+	// relative to camera we can only see cameraX+320(319?) and cameraY+112(111?)
+	// and relative to sprite layer, draw at playerXY-cameraXY
+	SPR_setPosition(humanPlayer.sprite,humanPlayer.x+camera.x,humanPlayer.y-camera.y);
+}
+
+void movePlayers() {
+	// move players and orient them if at a tile multiple.
+	if (humanPlayer.direction == 1) { // up
+		humanPlayer.y--;
+	} else if (humanPlayer.direction == 3) { // down
+		humanPlayer.y++;
+	} else if (humanPlayer.direction == 2) { // right
+		humanPlayer.x++;
+	} else if (humanPlayer.direction == 4) { // left ... in retrospect i think C has switch(){} for this. and would be more optimized.
+		humanPlayer.x--;
+	}
+	if (humanPlayer.x % 8 == 0 && humanPlayer.y % 8 == 0) {
+		humanPlayer.direction = humanPlayer.nextDirection;
+	}
+	
+}
+
+void checkPlayers() {
+	// (check if two players collide but we can do that later)
+	// check if players collide with wall, .. check if players collide with a path/claim in map
+	// for checking a player position against the map, round up. if position was just at a multiple, and increments, always round up to next map spot (ceiling).
+	if (humanPlayer.x < 8) { // player hit left wall
+		//gameover , reset screen(?)
+		humanPlayer.gameover = 1; // gameover player
+	} else if (humanPlayer.x > 496) { // player hit right wall
+		humanPlayer.gameover = 1;
+	} else if (humanPlayer.y < 8) { // player hit up wall
+		humanPlayer.gameover = 1;
+	} else if (humanPlayer.y > 496) { // player hit down wall .. eventually, derive where 496 comes from and implement as part of changeable map sizes
+		humanPlayer.gameover = 1;
+	}
+	// eventually iterate over computers array to check each computer wall collision
+	
+}
+
+void myJoyHandler(u16 joy, u16 changed, u16 state)
+{
+    if (joy == JOY_1) {
+        if (state & BUTTON_START) {
+         // player 1 pressed START button
+//            VDP_drawText("player1 START pressed  | TOMAWEZOME",0,0);
+			humanPlayer.nextDirection = 0;
+        } else if (changed & BUTTON_START) {
+         // player 1 released START button
+//            VDP_drawText("player1 START released | AWEZOMETOM",0,0);
+			humanPlayer.nextDirection = 0;
+        }
+        
+        else if (state & BUTTON_UP) {
+        	if (humanPlayer.direction != 3) { // can't go up into path if going down
+	        	humanPlayer.nextDirection = 1;
+	        }
+            /*y--;
+            cameraY = cameraY-8;*/
+//            VDP_resetScreen();
+        } else if (state & BUTTON_DOWN) {
+        	if (humanPlayer.direction != 1) { // can't go down into path if going up
+	        	humanPlayer.nextDirection = 3;
+	        }
+            /*y++;
+            cameraY = cameraY+8;*/
+//            SRAM_writeByte(x,x);
+//            VDP_resetScreen();
+        } else if (state & BUTTON_LEFT) {
+        	if (humanPlayer.direction != 2) { // can't go left into path if going right
+        		humanPlayer.nextDirection = 4;
+            }
+            /*x--;
+            cameraX = cameraX + 8;*/
+//            VDP_resetScreen();
+        } else if (state & BUTTON_RIGHT) {
+        	if (humanPlayer.direction != 4) { // can't go right into path if going left
+        		humanPlayer.nextDirection = 2;
+            }
+            /*x++;
+            cameraX = cameraX - 8;*/
+//            VDP_resetScreen();
+        }
+    }
+}
+
+int main()
+{
+	VDP_setPlanSize(64,64); //hard set 64 since early testing, later make variable and user-settable
+    VDP_loadTileData((const u32 *)borderTile,1,1,0);
+    VDP_loadTileData((const u32 *)pathTile,2,1,0);
+    VDP_loadTileData((const u32 *)claimTile,3,1,0);
+
+	VDP_setPalette(PAL1,strawberry.palette->data);
+	Sprite* berry;
+	SPR_init(0,0,0);
+	berry = SPR_addSprite(&strawberry,0,0,TILE_ATTR(PAL1,0,FALSE,FALSE));
+	humanPlayer.sprite = berry;
+	SPR_setPosition(berry,0,0);
+
+    VDP_fillTileMapRect(PLAN_A,1,0,0,64,1); // draws borders of map.
+    VDP_fillTileMapRect(PLAN_A,1,0,0,1,64); // hard set 64's since early testing.
+    VDP_fillTileMapRect(PLAN_A,1,0,63,63,1);//
+    VDP_fillTileMapRect(PLAN_A,1,63,0,1,64);//
+
+	// need to work out table of values to represent things, or create algorithm to determine what each value should be.
+	// second option, dynamic, sounds better. they're all unsigned so positive vals only.
+	// each player will have a path tile, and a claim tile. so assign these values based on how many players and computers * 2.
+	humanPlayer.pathMapValue = 1;
+	humanPlayer.claimMapValue = 2;
+	u8 computersAmount = sizeof(computers)/sizeof(computers[0]);
+	u8 mapValueCounter = 3;
+	for (u8 i = 0; i < computersAmount; i++) {
+		computers[i].pathMapValue = mapValueCounter;
+		mapValueCounter++;
+		computers[i].claimMapValue = mapValueCounter;
+		mapValueCounter++;
+	}
+
+    u8 map[64][64]; // map is a 2D array of u8's representing state of each tile on the tilemap.
+    for (u8 j = 0; j<64;j++) {
+    	for (u8 k = 0; k<64;k++) {
+    		map[j][k] = 0; // 0 represents an unclaimed tile so all tiles are being set to zero
+    	}
+    }
+        
+    JOY_init();
+    JOY_setEventHandler( &myJoyHandler);    
+
+	humanPlayer.x = 40; // put human player somewhere within map
+	humanPlayer.y = 40; // 
+	char debugString[10];
+    while (1)
+    {
+        //read input
+        //move sprite
+        //update score
+        //draw current screen (logo, start screen, settings, game, gameover, credits..)
+
+//        VDP_setTileMapXY(PLAN_A,1,x,y);
+
+        VDP_showFPS(0);
+		VDP_setHorizontalScroll(PLAN_A,camera.x);
+		VDP_setVerticalScroll(PLAN_A,camera.y);
+		intToStr(humanPlayer.x,debugString,0);
+		VDP_drawText("       ",4,4);
+		VDP_drawText(debugString,4,4);
+		movePlayers();
+		adjustCamera();
+		checkPlayers();
+		drawPlayers();
+		SPR_update();
+        VDP_waitVSync();
+    }
+    return 0;
+}

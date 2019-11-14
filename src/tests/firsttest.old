@@ -1,0 +1,24 @@
+# include <genesis.h>
+
+int main()
+{
+    VDP_drawText("VDP draw text? First processor to bit ba",0,0);
+    VDP_drawText("ng",0,1);
+    u8 i = 0;
+    
+    while (1)
+    {
+        //read input
+        //move sprite
+        //update score
+        //draw current screen (logo, start screen, settings, game, gameover, credits..)
+        i = i+1;
+        VDP_drawText("VDP draw text? First processor to bit ba",i,i);
+        VDP_drawText("ng",i,i+1);
+        
+        //politely wait for screen refresh instead of going nuts on the Genesis CPU
+        VDP_waitVSync();
+    }
+    return (0);
+}
+

@@ -1,0 +1,139 @@
+# include <genesis.h>
+
+
+u32 x = 0;
+u32 y = 0;
+
+s16 cameraX = 0;
+s16 cameraY = 0;
+
+void myJoyHandler(u16 joy, u16 changed, u16 state)
+{
+    if (joy == JOY_1) {
+        if (state & BUTTON_START) {
+         // player 1 pressed START button
+            VDP_drawText("player1 START pressed  | TOMAWEZOME",0,0);
+        } else if (changed & BUTTON_START) {
+         // player 1 released START button
+            VDP_drawText("player1 START released | AWEZOMETOM",0,0);
+            //char str[2];
+            //intToStr(b,str,0);
+            //VDP_drawText(str,0,0);
+        }
+        
+        else if (state & BUTTON_UP) {
+            y--;
+            cameraY = cameraY-8;
+//            VDP_resetScreen();
+        } else if (state & BUTTON_DOWN) {
+            y++;
+            cameraY = cameraY+8;
+//            SRAM_writeByte(x,x);
+//            VDP_resetScreen();
+        } else if (state & BUTTON_LEFT) {
+            x--;
+            cameraX = cameraX + 8;
+//            VDP_resetScreen();
+        } else if (state & BUTTON_RIGHT) {
+            x++;
+            cameraX = cameraX - 8;
+//            VDP_resetScreen();
+        }
+    }
+}
+
+const u32 borderTile[8]=
+{
+    0x11111111,
+    0x11111111,
+    0x11111111,
+    0x11111111,
+    0x11111111,
+    0x11111111,
+    0x11111111,
+    0x11111111,
+};
+
+const u32 pathTile[8]=
+{
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+};
+
+const u32 claimTile[8]=
+{
+    0x33333333,
+    0x33333333,
+	0x33333333,
+	0x33333333,
+	0x33333333,
+	0x33333333,
+	0x33333333,
+	0x33333333,
+
+};
+
+
+
+int main()
+{
+//    VDP_drawText("VDP draw text? First processor to bit ba",0,0);
+//    VDP_drawText("ng",0,1);
+//    SRAM_enable();
+	VDP_setPlanSize(64,64); //hard set 64 since early testing, later make variable and user-settable
+    VDP_loadTileData((const u32 *)borderTile,1,1,0);
+    VDP_loadTileData((const u32 *)pathTile,2,1,0);
+    VDP_loadTileData((const u32 *)claimTile,3,1,0);
+    VDP_fillTileMapRect(PLAN_A,1,0,0,64,1); // draws borders of map.
+    VDP_fillTileMapRect(PLAN_A,1,0,0,1,64); // hard set 64's since early testing.
+    VDP_fillTileMapRect(PLAN_A,1,0,63,63,1);//
+    VDP_fillTileMapRect(PLAN_A,1,63,0,1,64);//
+    JOY_init();
+    JOY_setEventHandler( &myJoyHandler);
+
+    u8 map[64][64];
+    for (u8 j = 0; j<64;j++) {
+    	for (u8 k = 0; k<64;k++) {
+    		map[j][k] = 0;
+    	}
+    }
+/*    char mapSizeString[10];
+    char *mapSizeStringPointer = mapSizeString;
+	uintToStr(sizeof(map),mapSizeStringPointer,0);*/
+    
+    while (1)
+    {
+        //read input
+        //move sprite
+        //update score
+        //draw current screen (logo, start screen, settings, game, gameover, credits..)
+//        i = i+1;
+//        VDP_drawText("VDP draw text? First processor to bit ba",i,i);
+//        VDP_drawText("ng",i,i+1);
+        
+        //politely wait for screen refresh instead of going nuts on the Genesis CPU
+//        VDP_drawText("@",x,y);
+        
+        //s16 x16 = x;
+        //s16 values[1] = {x16};
+        //s16* values_ptr = values;
+//        VDP_setTileMapXY(PLAN_A,1,x,y);
+        char hSize[5];
+        char wSize[5];
+        uintToStr(VDP_getPlanHeight(),hSize,0);
+        uintToStr(VDP_getPlanWidth(),wSize,0);
+        VDP_drawText(hSize,3,3);
+        VDP_drawText(wSize,3,4);
+        VDP_showFPS(0);
+		VDP_setHorizontalScroll(PLAN_A,cameraX);
+		VDP_setVerticalScroll(PLAN_A,cameraY);
+        VDP_waitVSync();
+    }
+    return 0;
+}

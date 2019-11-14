@@ -1,0 +1,76 @@
+# include <genesis.h>
+
+int x = 0;
+int y = 0;
+
+void myJoyHandler(u16 joy, u16 changed, u16 state)
+{
+    if (joy == JOY_1) {
+        if (state & BUTTON_START) {
+         // player 1 pressed START button
+            VDP_drawText("player1 START pressed | TOMAWEZOME",0,0);
+        } else if (changed & BUTTON_START) {
+         // player 1 released START button
+            VDP_drawText("player1 START released",0,0);
+/*            u8 b = SRAM_readByte(x);
+            char str[2];
+            intToStr(b,str,0);
+            VDP_drawText(str,0,0);*/
+        }
+        
+        else if (state & BUTTON_UP) {
+            y = y-1;
+            VDP_resetScreen();
+        } else if (state & BUTTON_DOWN) {
+            y = y+1;
+//            SRAM_writeByte(x,x);
+            VDP_resetScreen();
+        } else if (state & BUTTON_LEFT) {
+            x = x-1;
+            VDP_resetScreen();
+        } else if (state & BUTTON_RIGHT) {
+            x = x+1;
+            VDP_resetScreen();
+        }
+    }
+}
+
+const u32 tile[8]=
+{
+    0x44344344,
+    0x43444434,
+    0x44344344,
+    0x44344344,
+    0x44344344,
+    0x44344344,
+    0x43444434,
+    0x44344344,
+};
+
+
+int main()
+{
+//    VDP_drawText("VDP draw text? First processor to bit ba",0,0);
+//    VDP_drawText("ng",0,1);
+//    SRAM_enable();
+    VDP_loadTileData((const u32 *)tile,1,1,0);
+    JOY_init();
+    JOY_setEventHandler( &myJoyHandler);
+    while (1)
+    {
+        //read input
+        //move sprite
+        //update score
+        //draw current screen (logo, start screen, settings, game, gameover, credits..)
+//        i = i+1;
+//        VDP_drawText("VDP draw text? First processor to bit ba",i,i);
+//        VDP_drawText("ng",i,i+1);
+        
+        //politely wait for screen refresh instead of going nuts on the Genesis CPU
+//        VDP_drawText("@",x,y);
+        VDP_setTileMapXY(PLAN_A,1,x,y);
+        VDP_waitVSync();
+    }
+    return 0;
+}
+

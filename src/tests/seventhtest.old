@@ -1,0 +1,127 @@
+# include <genesis.h>
+# include <resources.h>
+
+u32 x = 0;
+u32 y = 0;
+
+s16 cameraX = 0;
+s16 cameraY = 0;
+
+u8 direction = 0; // 0 up, 1 right, 2 down, 3 left
+
+void myJoyHandler(u16 joy, u16 changed, u16 state)
+{
+    if (joy == JOY_1) {
+        if (state & BUTTON_START) {
+         // player 1 pressed START button
+//            VDP_drawText("player1 START pressed  | TOMAWEZOME",0,0);
+        } else if (changed & BUTTON_START) {
+         // player 1 released START button
+//            VDP_drawText("player1 START released | AWEZOMETOM",0,0);
+        }
+        
+        else if (state & BUTTON_UP) {
+            y--;
+            cameraY = cameraY-8;
+//            VDP_resetScreen();
+        } else if (state & BUTTON_DOWN) {
+            y++;
+            cameraY = cameraY+8;
+//            SRAM_writeByte(x,x);
+//            VDP_resetScreen();
+        } else if (state & BUTTON_LEFT) {
+            x--;
+            cameraX = cameraX + 8;
+//            VDP_resetScreen();
+        } else if (state & BUTTON_RIGHT) {
+            x++;
+            cameraX = cameraX - 8;
+//            VDP_resetScreen();
+        }
+    }
+}
+
+const u32 borderTile[8]=
+{
+    0x11111111,
+    0x11111111,
+    0x11111111,
+    0x11111111,
+    0x11111111,
+    0x11111111,
+    0x11111111,
+    0x11111111,
+};
+
+const u32 pathTile[8]=
+{
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+    0x22222222,
+};
+
+const u32 claimTile[8]=
+{
+    0x33333333,
+    0x33333333,
+	0x33333333,
+	0x33333333,
+	0x33333333,
+	0x33333333,
+	0x33333333,
+	0x33333333,
+
+};
+
+
+
+int main()
+{
+	VDP_setPlanSize(64,64); //hard set 64 since early testing, later make variable and user-settable
+    VDP_loadTileData((const u32 *)borderTile,1,1,0);
+    VDP_loadTileData((const u32 *)pathTile,2,1,0);
+    VDP_loadTileData((const u32 *)claimTile,3,1,0);
+
+	VDP_setPalette(PAL1,strawberry.palette->data);
+	Sprite* berry;
+	SPR_init(0,0,0);
+	berry = SPR_addSprite(&strawberry,0,0,TILE_ATTR(PAL1,0,FALSE,FALSE));
+	SPR_setPosition(berry,8,8);
+
+    VDP_fillTileMapRect(PLAN_A,1,0,0,64,1); // draws borders of map.
+    VDP_fillTileMapRect(PLAN_A,1,0,0,1,64); // hard set 64's since early testing.
+    VDP_fillTileMapRect(PLAN_A,1,0,63,63,1);//
+    VDP_fillTileMapRect(PLAN_A,1,63,0,1,64);//
+
+    u8 map[64][64]; // map is a 2D array of u8's representing state of each tile on the tilemap.
+    for (u8 j = 0; j<64;j++) {
+    	for (u8 k = 0; k<64;k++) {
+    		map[j][k] = 0; // 0 represents an unclaimed tile so all tiles are being set to zero
+    	}
+    }
+        
+    JOY_init();
+    JOY_setEventHandler( &myJoyHandler);    
+
+    while (1)
+    {
+        //read input
+        //move sprite
+        //update score
+        //draw current screen (logo, start screen, settings, game, gameover, credits..)
+
+//        VDP_setTileMapXY(PLAN_A,1,x,y);
+
+        VDP_showFPS(0);
+		VDP_setHorizontalScroll(PLAN_A,cameraX);
+		VDP_setVerticalScroll(PLAN_A,cameraY);
+		SPR_update();
+        VDP_waitVSync();
+    }
+    return 0;
+}
