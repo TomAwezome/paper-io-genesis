@@ -2,7 +2,7 @@
 Paper-io 1 Demake for Sega Genesis / Sega Mega Drive written in C using SGDK.
 
 ## Playing
-Load the ROM into a Genesis / Mega Drive emulator, or put it on a flash-cart and play on hardware.
+Load the ROM into a Genesis / Mega Drive emulator.
  - Get the built ROM here: [ROM File](https://github.com/TomAwezome/paper-io-genesis/releases/latest)
 
 ## Building from Source
