@@ -13,5 +13,5 @@ Once gendev is installed, I use `make -f $GENDEV/sgdk/mkfiles/makefile.gen clean
 
 ## Screenshots
 
-![Screenshot 1](https://github.com/TomAwezome/paper-io-genesis/blob/master/screenshot1.png "Screenshot 1")
-![Screenshot 2](https://github.com/TomAwezome/paper-io-genesis/blob/master/screenshot2.png "Screenshot 2")
+![Screenshot 1](screenshot1.png)
+![Screenshot 2](screenshot2.png)
